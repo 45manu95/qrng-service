@@ -1,0 +1,7 @@
+# Ignora le variabili d'ambiente
+.env
+
+# Ignora le cartelle di Python
+venv/
+__pycache__/
+*.pyc

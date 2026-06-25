@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # 1. The Redis database used for the entropy pool and as a broker for Celery
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  # 2. The FastAPI backend
+  api:
+    build: .
+    # Runs the translated cloud_qrng_service module
+    command: uvicorn app.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "127.0.0.1:8000:8000" # Maps port 8000 of the container to the host machine
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+
+  # 3. The Celery Worker communicating with IBM Quantum
+  worker:
+    build: .
+    # Points to the translated qrng_tasks module
+    command: celery -A app.tasks worker --loglevel=info
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - IBM_TOKEN=${IBM_TOKEN}
+
+  # 4. The Orchestrator monitoring the pool level
+  orchestrator:
+    build: .
+    command: python app/orchestrator.py
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
