@@ -33,7 +33,7 @@ services:
   # 4. The Orchestrator monitoring the pool level
   orchestrator:
     build: .
-    command: python app/orchestrator.py
+    command: python -m app.orchestrator
     depends_on:
       - redis
     environment:
